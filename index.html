@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>神經重症（NICU）臨床互動工具箱</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        medical: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                            750: '#0369a1',
+                            800: '#075985',
+                            900: '#0c4a6e',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans antialiased min-h-screen flex flex-col">
+
+    <!-- 頂部導覽列 -->
+    <header class="bg-medical-800 text-white shadow-md sticky top-0 z-50">
+        <div class="max-w-2xl mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center space-x-2">
+                <span class="text-2xl">🧠</span>
+                <div>
+                    <h1 class="font-bold text-lg leading-tight">NICU 臨床智能教練</h1>
+                    <p class="text-xs text-sky-200">神經重症評分與情境挑戰系統</p>
+                </div>
+            </div>
+            <div class="text-xs bg-medical-900 px-2.5 py-1 rounded-full border border-sky-700">
+                v1.2 臨床版
+            </div>
+        </div>
+    </header>
+
+    <!-- 主頁籤切換 -->
+    <nav class="bg-white border-b border-slate-200 sticky top-[57px] z-40 shadow-sm">
+        <div class="max-w-2xl mx-auto flex">
+            <button onclick="switchTab('calculator')" id="btn-calculator" class="flex-1 py-3 px-4 text-center font-medium text-sm border-b-2 border-medical-600 text-medical-600 transition-all flex items-center justify-center space-x-1.5">
+                <span>📋</span>
+                <span>快速評分計算機</span>
+            </button>
+            <button onclick="switchTab('quiz')" id="btn-quiz" class="flex-1 py-3 px-4 text-center font-medium text-sm border-b-2 border-transparent text-slate-500 hover:text-slate-700 transition-all flex items-center justify-center space-x-1.5">
+                <span>🎯</span>
+                <span>臨床情境挑戰賽</span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- 主要內容區 -->
+    <main class="max-w-2xl w-auto mx-auto px-4 py-6 flex-grow pb-12">
+
+        <!-- 模式一：臨床快速評分計算機 -->
+        <section id="tab-calculator" class="space-y-6">
+            
+            <!-- GCS 評分卡片 -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 space-y-4">
+                <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+                    <h2 class="font-bold text-slate-800 flex items-center space-x-2">
+                        <span class="w-2 h-5 bg-medical-600 rounded-full inline-block"></span>
+                        <span>昏迷指數 (GCS 評估)</span>
+                    </h2>
+                    <span id="gcs-total" class="text-xl font-extrabold text-medical-600 bg-medical-50 px-3 py-1 rounded-xl">15 分</span>
+                </div>
+
+                <!-- 眼睛反應 E -->
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">1. 眼睛反應 (Eye, E)</label>
+                    <select id="gcs-e" onchange="calculateGCS()" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-medical-500 focus:outline-none">
+                        <option value="4">4分 - 自發性張眼 (Spontaneous)</option>
+                        <option value="3">3v - 對聲音刺激張眼 (To speech)</option>
+                        <option value="2">2 - 對疼痛刺激張眼 (To pain)</option>
+                        <option value="1">1 - 無反應 (None)</option>
+                    </select>
+                </div>
+
+                <!-- 語言反應 V -->
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">2. 語言反應 (Verbal, V)</label>
+                    <select id="gcs-v" onchange="calculateGCS()" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-medical-500 focus:outline-none">
+                        <option value="5">5分 - 對答如流 / 定向力正常 (Oriented)</option>
+                        <option value="4">4分 - 混亂不清 (Confused)</option>
+                        <option value="3">3分 - 不適當的單字 (Inappropriate words)</option>
+                        <option value="2">2分 - 聲音不具意義 (Incomprehensible sounds)</option>
+                        <option value="1">1分 - 無發聲 (None)</option>
+                    </select>
+                </div>
+
+                <!-- 運動反應 M -->
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">3. 運動反應 (Motor, M)</label>
+                    <select id="gcs-m" onchange="calculateGCS()" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-medical-500 focus:outline-none">
+                        <option value="6">6分 - 遵從指令動作 (Obeys commands)</option>
+                        <option value="5">5分 - 對疼痛處局部反應 (Localizes pain)</option>
+                        <option value="4">4分 - 刺痛縮回 (Withdrawal)</option>
+                        <option value="3">3分 - 異常屈曲反應 / 去皮質 (Abnormal flexion)</option>
+                        <option value="2">2分 - 異常伸展反應 / 去大腦 (Extensor response)</option>
+                        <option value="1">1分 - 無反應 (None)</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Hunt-Hess 級分評估（專為腦動脈瘤/蜘蛛膜下腔出血設計） -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 space-y-4">
+                <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+                    <h2 class="font-bold text-slate-800 flex items-center space-x-2">
+                        <span class="w-2 h-5 bg-sky-500 rounded-full inline-block"></span>
+                        <span>Hunt-Hess 級分 (SAH 專用)</span>
+                    </h2>
+                </div>
+                <div>
+                    <select id="hunt-hess" onchange="updateClinicalTips()" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-medical-500 focus:outline-none">
+                        <option value="1">Grade 1: 無症狀，或輕微頭痛、輕度頸部僵硬</option>
+                        <option value="2">Grade 2: 中度至重度頭痛、頸部僵硬、除腦神經麻痺外無其他神經學症狀</option>
+                        <option value="3">Grade 3: 嗜睡、混亂、輕微局灶性神經學缺損</option>
+                        <option value="4">Grade 4: 昏迷、中度至重度偏癱、早期去腦僵直</option>
+                        <option value="5">Grade 5: 深昏迷、去大腦僵直、瀕死狀態</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- 動態臨床交班與照護提示 -->
+            <div class="bg-sky-900 text-white rounded-2xl shadow-md p-5 space-y-3">
+                <h3 class="font-bold text-sky-200 flex items-center space-x-2 text-sm uppercase tracking-wider">
+                    <span>💡</span>
+                    <span>即時臨床照護與交班重點提示</span>
+                </h3>
+                <div id="clinical-advice" class="text-sm space-y-2 text-sky-100 leading-relaxed">
+                    <!-- 動態帶入 -->
+                </div>
+            </div>
+
+        </section>
+
+        <!-- 模式二：新手護理師情境挑戰賽（Mini Quiz） -->
+        <section id="tab-quiz" class="space-y-6 hidden">
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 space-y-4">
+                <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+                    <h2 class="font-bold text-slate-800">神經重症情境挑戰</h2>
+                    <span id="quiz-progress" class="text-xs font-bold text-medical-600 bg-medical-50 px-2.5 py-1 rounded-full">題目 1 / 3</span>
+                </div>
+
+                <!-- 題目容器 -->
+                <div id="quiz-container" class="space-y-4">
+                    <!-- 動態渲染 -->
+                </div>
+
+                <!-- 答題回饋區 -->
+                <div id="quiz-feedback" class="hidden rounded-xl p-4 text-sm space-y-2 border">
+                    <!-- 帶入解析 -->
+                </div>
+
+                <!-- 下一題按鈕 -->
+                <button id="next-btn" onclick="nextQuizQuestion()" class="w-full bg-medical-600 hover:bg-medical-700 text-white font-medium py-3 rounded-xl transition-all hidden shadow-sm">
+                    下一題 ➔
+                </button>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- 底部版權 -->
+    <footer class="text-center py-4 text-xs text-slate-400 border-t border-slate-200 bg-white">
+        © 2026 NICU Nursing Quality & Clinical Education Group. All rights reserved.
+    </footer>
+
+    <!-- JavaScript 互動邏輯 -->
+    <script>
+        // --- 頁籤切換邏輯 ---
+        function switchTab(tabName) {
+            const calcSection = document.getElementById('tab-calculator');
+            const quizSection = document.getElementById('tab-quiz');
+            const btnCalc = document.getElementById('btn-calculator');
+            const btnQuiz = document.getElementById('btn-quiz');
+
+            if (tabName === 'calculator') {
+                calcSection.classList.remove('hidden');
+                quizSection.classList.add('hidden');
+                btnCalc.className = "flex-1 py-3 px-4 text-center font-medium text-sm border-b-2 border-medical-600 text-medical-600 transition-all flex items-center justify-center space-x-1.5";
+                btnQuiz.className = "flex-1 py-3 px-4 text-center font-medium text-sm border-b-2 border-transparent text-slate-500 hover:text-slate-700 transition-all flex items-center justify-center space-x-1.5";
+            } else {
+                calcSection.classList.add('hidden');
+                quizSection.classList.remove('hidden');
+                btnQuiz.className = "flex-1 py-3 px-4 text-center font-medium text-sm border-b-2 border-medical-600 text-medical-600 transition-all flex items-center justify-center space-x-1.5";
+                btnCalc.className = "flex-1 py-3 px-4 text-center font-medium text-sm border-b-2 border-transparent text-slate-500 hover:text-slate-700 transition-all flex items-center justify-center space-x-1.5";
+            }
+        }
+
+        // --- 評分計算機邏輯 ---
+        function calculateGCS() {
+            const e = parseInt(document.getElementById('gcs-e').value);
+            const v = parseInt(document.getElementById('gcs-v').value);
+            const m = parseInt(document.getElementById('gcs-m').value);
+            const total = e + v + m;
+
+            document.getElementById('gcs-total').innerText = total + " 分";
+            updateClinicalTips(total);
+        }
+
+        function updateClinicalTips(gcsTotal = 15) {
+            if (gcsTotal === undefined) {
+                const e = parseInt(document.getElementById('gcs-e').value);
+                const v = parseInt(document.getElementById('gcs-v').value);
+                const m = parseInt(document.getElementById('gcs-m').value);
+                gcsTotal = e + v + m;
+            }
+            const huntHess = document.getElementById('hunt-hess').value;
+            const adviceBox = document.getElementById('clinical-advice');
+
+            let tips = "";
+
+            // GCS 判定給予建議
+            if (gcsTotal <= 8) {
+                tips += `<p class="flex items-start space-x-2"><span>⚠️</span><span><strong>GCS ≤ 8 分：</strong>病人屬重度昏迷，已達插管與人工呼吸器適應症。務必保護氣道、嚴密監測 ICP（顱內壓），維持 CPP（腦 perfusion pressure）> 60-70 mmHg。</span></p>`;
+            } else if (gcsTotal <= 12) {
+                tips += `<p class="flex items-start space-x-2"><span>⚠️</span><span><strong>GCS 9-12 分：</strong>中度意識障礙，交班須注意吞嚥及保護反射是否喪失，防止吸入性肺炎。</span></p>`;
+            } else {
+                tips += `<p class="flex items-start space-x-2"><span>✅</span><span><strong>GCS 13-15 分：</strong>意識清醒或輕度障礙，持續評估神經學微小變化（如肢體僵硬或無力）。</span></p>`;
+            }
+
+            // Hunt-Hess 判定建議
+            if (huntHess >= 4) {
+                tips += `<p class="flex items-start space-x-2"><span>🚨</span><span><strong>Hunt-Hess 高風險 (Grade ${huntHess})：</strong>動脈瘤再出血或腦血管痙攣（Vasospasm）高風險期。維持嚴格臥床、保持環境安靜暗室、穩定控制血壓（避免過高破裂、過低缺血）。</span></p>`;
+            } else {
+                tips += `<p class="flex items-start space-x-2"><span>💡</span><span><strong>Hunt-Hess 級分 (Grade ${huntHess})：</strong>定期監測 transcranial Doppler (TCD) 及神經學症狀，預防遲發性缺血性神經障礙 (DIND)。</span></p>`;
+            }
+
+            adviceBox.innerHTML = tips;
+        }
+
+        // 初始化載入提示
+        document.addEventListener("DOMContentLoaded", () => {
+            updateClinicalTips(15);
+            loadQuizQuestion();
+        });
+
+
+        // --- 情境挑戰賽資料庫 ---
+        const quizData = [
+            {
+                question: "情境一：術後 2 小時，腦室外引流管 (EVD) 突然在 15 分鐘內連續流出超過 30 mL 的鮮紅色血液，病人躁動、心跳加快。下列處置何者最優先？",
+                options: [
+                    "A. 自行將 EVD 高度調高 10 公分。",
+                    "B. 先將 EVD 夾管（Clamp），並立刻通知醫師與值班學姊。",
+                    "C. 立即將床頭放平，增加腦部血流灌注。",
+                    "D. 給予口服鎮靜劑讓病人安靜。"
+                ],
+                answer: 1,
+                rationale: "解析：EVD 突然大量出血或引流出血性液體，可能代表顱內出血或引流過速。第一步應立即關閉EVD<strong>立即通知醫師</strong>。絕對不能擅自調整引流高度；更不能放平床頭。"
+            },
+            {
+                question: "情境二：照護一位重症腦傷病人時，發現右側瞳孔由原本正常大小（3mm）擴大至 5mm，且對光反射由靈敏變為遲鈍（Sluggish），左側正常。最可能的臨床意義為何？",
+                options: [
+                    "A. 病人點了散瞳劑，屬於正常藥理反應。",
+                    "B. 右側動眼神經（CN III）受到壓迫，可能正發生腦疝脫（Herniation）或顱內血腫擴大。",
+                    "C. 病人眼睛疲勞，不需要特別理會。",
+                    "D. 腦幹功能完全恢復的表徵。"
+                ],
+                answer: 1,
+                rationale: "解析：單側瞳孔放大伴隨對光反射遲鈍或消失，是顱內壓增高導致<strong>腦疝脫（如小腦幕切跡疝脫，Uncal herniation）</strong>壓迫同側動眼神經（CN III）的經典警訊，必須立即回報並準備進行急救或影像檢查。"
+            },
+            {
+                question: "情境三：神經重症病人在脫離呼吸器評估（Weaning Trial）過程中，呼吸次數由 18次/分 升至 32次/分，血氧飽和度 (SpO2) 從 98% 降至 90%，病人表現焦慮冒汗。護理師最適當的處置是？",
+                options: [
+                    "A. 鼓勵病人再堅持 30 分鐘，這是正常適應過程。",
+                    "B. 立即停止脫離程序，恢復原呼吸器支持設定，並向醫療團隊報告。",
+                    "C. 直接移除氣管內管。",
+                    "D. 降低給氧濃度觀望。"
+                ],
+                answer: 1,
+                rationale: "解析：出現呼吸急促、血氧下降與焦慮冒汗，代表呼吸肌負荷過重或神經肌肉耐受不良，屬<strong>脫離失敗（Weaning Failure）</strong>指標。應立即終止試驗、給予適當支持並通報。"
+            }
+        ];
+
+        let currentQuizIndex = 0;
+        let score = 0;
+        let answeredCurrent = false;
+
+        function loadQuizQuestion() {
+            answeredCurrent = false;
+            const q = quizData[currentQuizIndex];
+            document.getElementById('quiz-progress').innerText = `題目 ${currentQuizIndex + 1} / ${quizData.length}`;
+            
+            let html = `<p class="font-bold text-slate-800 text-base mb-4 leading-relaxed">${q.question}</p>`;
+            html += `<div class="space-y-2.5">`;
+            q.options.forEach((opt, idx) => {
+                html += `<button onclick="selectOption(${idx})" id="opt-${idx}" class="w-full text-left p-3.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-sky-50 text-sm transition-all flex items-start space-x-2">
+                    <span class="font-bold text-slate-400">${['A', 'B', 'C', 'D'][idx]}.</span>
+                    <span class="flex-grow">${opt.substring(3)}</span>
+                </button>`;
+            });
+            html += `</div>`;
+
+            document.getElementById('quiz-container').innerHTML = html;
+            document.getElementById('quiz-feedback').classList.add('hidden');
+            document.getElementById('next-btn').classList.add('hidden');
+        }
+
+        function selectOption(selectedIndex) {
+            if (answeredCurrent) return;
+            answeredCurrent = true;
+
+            const q = quizData[currentQuizIndex];
+            const feedbackBox = document.getElementById('quiz-feedback');
+            const nextBtn = document.getElementById('next-btn');
+
+            // 標示對錯
+            q.options.forEach((_, idx) => {
+                const btn = document.getElementById(`opt-${idx}`);
+                btn.disabled = true;
+                if (idx === q.answer) {
+                    btn.className = "w-full text-left p-3.5 rounded-xl border border-emerald-300 bg-emerald-50 text-emerald-900 text-sm font-medium flex items-start space-x-2";
+                } else if (idx === selectedIndex) {
+                    btn.className = "w-full text-left p-3.5 rounded-xl border border-rose-300 bg-rose-50 text-rose-900 text-sm font-medium flex items-start space-x-2";
+                } else {
+                    btn.className = "w-full text-left p-3.5 rounded-xl border border-slate-200 bg-slate-100 text-slate-400 text-sm opacity-60 flex items-start space-x-2";
+                }
+            });
+
+            if (selectedIndex === q.answer) {
+                score++;
+                feedbackBox.className = "rounded-xl p-4 text-sm space-y-1 border border-emerald-200 bg-emerald-50 text-emerald-900";
+                feedbackBox.innerHTML = `<p class="font-bold flex items-center space-x-1.5"><span>🎉</span><span>回答正確！</span></p><p class="text-xs leading-relaxed mt-1">${q.rationale}</p>`;
+            } else {
+                feedbackBox.className = "rounded-xl p-4 text-sm space-y-1 border border-rose-200 bg-rose-50 text-rose-900";
+                feedbackBox.innerHTML = `<p class="font-bold flex items-center space-x-1.5"><span>❌</span><span>回答錯誤！正確答案是選項 ${['A', 'B', 'C', 'D'][q.answer]}</span></p><p class="text-xs leading-relaxed mt-1">${q.rationale}</p>`;
+            }
+
+            feedbackBox.classList.remove('hidden');
+            nextBtn.classList.remove('hidden');
+
+            if (currentQuizIndex === quizData.length - 1) {
+                nextBtn.innerText = "查看總結與通關結果 🏆";
+            }
+        }
+
+        function nextQuizQuestion() {
+            currentQuizIndex++;
+            if (currentQuizIndex < quizData.length) {
+                loadQuizQuestion();
+                document.getElementById('next-btn').innerText = "下一題 ➔";
+            } else {
+                // 顯示結果
+                const container = document.getElementById('quiz-container');
+                document.getElementById('quiz-feedback').classList.add('hidden');
+                document.getElementById('next-btn').classList.add('hidden');
+                document.getElementById('quiz-progress').innerText = "挑戰完成";
+
+                container.innerHTML = `
+                    <div class="text-center py-8 space-y-4">
+                        <div class="text-5xl">🏆</div>
+                        <h3 class="text-xl font-bold text-slate-800">恭喜完成神經重症情境挑戰！</h3>
+                        <p class="text-sm text-slate-600">您的答對題數：<span class="font-extrabold text-medical-600 text-lg">${score}</span> / ${quizData.length}</p>
+                        <p class="text-xs text-slate-500 bg-sky-50 p-4 rounded-xl border border-sky-100 leading-relaxed">
+                            ${score === 3 ? '太棒了！您具備極佳的神經重症臨床判斷力與危機處理能力，非常適合擔任臨床守護者。' : '基礎觀念掌握不錯，建議針對不熟悉的交班與引流管防護細節再加強複習！'}
+                        </p>
+                        <button onclick="resetQuiz()" class="bg-medical-600 hover:bg-medical-700 text-white font-medium px-6 py-2.5 rounded-xl text-sm transition-all shadow-sm">
+                            重新挑戰 🔄
+                        </button>
+                    </div>
+                `;
+            }
+        }
+
+        function resetQuiz() {
+            currentQuizIndex = 0;
+            score = 0;
+            document.getElementById('next-btn').innerText = "下一題 ➔";
+            loadQuizQuestion();
+        }
+    </script>
+</body>
+</html>
